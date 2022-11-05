@@ -9,4 +9,8 @@ export class PlaylistsService {
     @InjectRepository(Playlists)
     private playlistsRepository: Repository<Playlists>,
   ) {}
+
+  getPlaylists() {
+    return this.playlistsRepository.query('SELECT * FROM playlists;');
+  }
 }

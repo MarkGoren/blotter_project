@@ -2,18 +2,18 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as session from 'express-session';
 import * as cookieParser from 'cookie-parser';
-import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
     credentials: true,
-    origin: 'http://localhost:3000',
+    origin: 'http://localhost:3001',
   });
-  const configService = app.get(ConfigService);
+  // const configService = app.get(ConfigService);
   app.use(
     session({
-      secret: configService.get('SESSION_SECRET'),
+      // secret: configService.get('SESSION_SECRET'),
+      secret: 'SeCrEt',
       resave: false,
       saveUninitialized: true,
       cookie: {

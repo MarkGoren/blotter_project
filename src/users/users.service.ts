@@ -24,4 +24,24 @@ export class UsersService {
       `insert into users (username, email, password_hash, is_sub) values ('${username}', '${userInfo.email}', '${hashed}', false)`,
     );
   }
+
+  userLogin(userInfo) {
+    return this.usersRepository
+      .query(
+        `select password_hash from users where email like '${userInfo.email}'`,
+      )
+      .then((data) => {
+        if (data[0]) {
+          if (bcrypt.compareSync(userInfo.password, data[0].password_hash)) {
+            return this.usersRepository.query(
+              `select * from users where email like '${userInfo.email}'`,
+            );
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      });
+  }
 }

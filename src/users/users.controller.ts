@@ -28,4 +28,20 @@ export class UsersController {
   userExists(@Param('email') email: string) {
     return this.usersService.userExists(email);
   }
+
+  @Post('login')
+  async userLogin(
+    @Body()
+    loginInfo,
+    @Req() req,
+    @Res() res,
+  ) {
+    const userInfo = await this.usersService.userLogin(loginInfo);
+    if (userInfo) {
+      res.cookie('userInfo', userInfo[0]);
+      res.end();
+    } else {
+      res.end();
+    }
+  }
 }

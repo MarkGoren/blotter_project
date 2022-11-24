@@ -16,4 +16,7 @@ export class Users {
 
   @Column()
   is_sub: boolean;
+
+  @Column({ nullable: true })
+  last_submit: Date;
 }

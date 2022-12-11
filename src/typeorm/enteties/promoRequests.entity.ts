@@ -16,7 +16,4 @@ export class PromoRequests {
 
   @Column()
   song_src: string;
-
-  @Column({ nullable: true, default: null })
-  is_approved: boolean;
 }

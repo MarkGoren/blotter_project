@@ -7,14 +7,18 @@ import { UserPromoPlaylistsModule } from './userPromoPlaylists/userPromoPlaylist
 import { PromoRequestsModule } from './promoRequests/promoRequests.module';
 import { PlaylistsModule } from './playlists/playlists.module';
 import { FavoritesModule } from './favorites/favorites.module';
+import { AdminsModule } from './admins/admins.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     UsersModule,
     UserPromoPlaylistsModule,
     PromoRequestsModule,
     PlaylistsModule,
     FavoritesModule,
+    AdminsModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',

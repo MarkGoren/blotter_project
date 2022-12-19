@@ -8,6 +8,12 @@ export class UserPromoPlaylists {
   @Column()
   user_id: number;
 
+  @Column({ nullable: true })
+  playlist_id: string;
+
   @Column()
-  playlist_id: number;
+  is_approved: boolean;
+
+  @Column()
+  song_src: string;
 }

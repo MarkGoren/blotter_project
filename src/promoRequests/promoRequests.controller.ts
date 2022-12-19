@@ -19,4 +19,19 @@ export class PromoRequestsController {
   getLastReqDate(@Param('userId') userId: number) {
     return this.promoRequestsService.getLastReqDate(userId);
   }
+
+  @Get('getAll')
+  getAll() {
+    return this.promoRequestsService.getAll();
+  }
+
+  @Post('processRequest')
+  processRequest(
+    @Body()
+    info,
+    @Res() res,
+  ) {
+    this.promoRequestsService.processRequest(info);
+    res.end();
+  }
 }

@@ -1,5 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { PlaylistsService } from './playlists.service';
+import SpotifyWebApi from 'spotify-web-api-node';
 
 @Controller('playlists')
 export class PlaylistsController {

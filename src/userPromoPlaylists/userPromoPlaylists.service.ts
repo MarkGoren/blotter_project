@@ -9,4 +9,10 @@ export class UserPromoPlaylistsService {
     @InjectRepository(UserPromoPlaylists)
     private userPromoPlaylistsRepository: Repository<UserPromoPlaylists>,
   ) {}
+
+  getUserPromoPlaylists(userId) {
+    return this.userPromoPlaylistsRepository.query(
+      `SELECT * FROM user_promo_playlists WHERE user_id = ${userId}`,
+    );
+  }
 }

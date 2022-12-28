@@ -43,4 +43,10 @@ export class UsersService {
         }
       });
   }
+
+  userSubscribe(userInfo) {
+    this.usersRepository.query(
+      `UPDATE users SET is_sub = '1' WHERE id = '${userInfo.id}'`,
+    );
+  }
 }

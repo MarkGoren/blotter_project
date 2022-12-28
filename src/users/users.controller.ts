@@ -44,4 +44,16 @@ export class UsersController {
       res.end();
     }
   }
+
+  @Post('subscribe')
+  async userSubscribe(
+    @Body()
+    userInfo,
+    @Req() req,
+    @Res() res,
+  ) {
+    this.usersService.userSubscribe(userInfo);
+    res.cookie('isSub', true);
+    res.end();
+  }
 }

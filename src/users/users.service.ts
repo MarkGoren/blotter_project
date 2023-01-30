@@ -49,4 +49,10 @@ export class UsersService {
       `UPDATE users SET is_sub = '1' WHERE id = '${userInfo.id}'`,
     );
   }
+
+  getSubscribedEmails() {
+    return this.usersRepository.query(
+      `SELECT email FROM users WHERE is_sub = '1'`,
+    );
+  }
 }

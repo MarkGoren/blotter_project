@@ -9,6 +9,10 @@ import { PlaylistsModule } from './playlists/playlists.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { AdminsModule } from './admins/admins.module';
 import { ConfigModule } from '@nestjs/config';
+import { SendgridModule } from './sendgrid/sendgrid.module';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { join } from 'path';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 
 @Module({
   imports: [
@@ -19,6 +23,23 @@ import { ConfigModule } from '@nestjs/config';
     PlaylistsModule,
     FavoritesModule,
     AdminsModule,
+    SendgridModule,
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.sendgrid.net',
+        auth: {
+          user: '	apikey',
+          pass: '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',
+        },
+      },
+      template: {
+        dir: join(__dirname, 'mails'),
+        adapter: new HandlebarsAdapter(),
+        options: {
+          strict: true,
+        },
+      },
+    }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',

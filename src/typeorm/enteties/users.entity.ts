@@ -19,4 +19,7 @@ export class Users {
 
   @Column({ nullable: true })
   last_submit: Date;
+
+  @Column({ nullable: false, default: 0 })
+  is_verified: boolean;
 }

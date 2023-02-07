@@ -2,9 +2,10 @@ import {
   Body,
   Controller,
   Get,
-  HttpException,
   Param,
   Post,
+  Put,
+  Redirect,
   Req,
   Res,
 } from '@nestjs/common';
@@ -20,7 +21,12 @@ export class UsersController {
     @Req() req,
     @Res() res,
   ) {
-    this.usersService.userRegister(userInfo);
+    this.usersService.userRegister(userInfo).then(() => {
+      this.usersService.getUserInfoByEmail(userInfo.email).then((data) => {
+        this.usersService.sendVerificationEmail(data[0]);
+      });
+    });
+    res.status(200);
     res.end();
   }
 
@@ -54,6 +60,13 @@ export class UsersController {
   ) {
     this.usersService.userSubscribe(userInfo);
     res.cookie('isSub', true);
+    res.end();
+  }
+
+  @Get('verifyEmail/:userId')
+  async verifyEmail(@Param('userId') userId: number, @Res() res) {
+    this.usersService.verifyEmail(userId);
+    res.redirect(302, 'http://localhost:3001/');
     res.end();
   }
 }

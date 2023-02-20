@@ -69,4 +69,26 @@ export class UsersController {
     res.redirect(302, 'http://localhost:3001/');
     res.end();
   }
+
+  @Get('forgotPassword/:userId')
+  async openChangePasswordPage(@Param('userId') userId: number, @Res() res) {
+    res.cookie('userId', userId);
+    res.redirect(302, 'http://localhost:3001/changePassword');
+    res.end();
+  }
+
+  @Post('sendResetPasswordEmail')
+  async sendResetPasswordEmail(@Body() data, @Res() res) {
+    this.usersService
+      .getUserInfoByEmail(data.email)
+      .then((data) => this.usersService.sendResetPasswordEmail(data[0]));
+    res.end();
+  }
+
+  @Post('changePassword')
+  async changePassword(@Body() data, @Req() req, @Res() res) {
+    const userId = req.cookies.userId;
+    this.usersService.changePassword(userId, data.password);
+    res.end();
+  }
 }

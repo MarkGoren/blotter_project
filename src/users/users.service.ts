@@ -49,6 +49,27 @@ export class UsersService {
     return SendGrid.send(mail);
   }
 
+  sendResetPasswordEmail(userInfo) {
+    const configService = new ConfigService();
+    const mail = {
+      from: 'gormark2001@gmail.com',
+      to: userInfo.email,
+      cc: '',
+      templateId: configService.get<string>('EMAIL_RESET_PASSWORD_TEMPLATE_ID'),
+      dynamicTemplateData: {
+        link: `http://localhost:3000/users/forgotPassword/${userInfo.id}`,
+      },
+    };
+    return SendGrid.send(mail);
+  }
+
+  changePassword(userId, newPassword) {
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    return this.usersRepository.query(
+      `UPDATE users SET password_hash = '${hashedPassword}' WHERE id = '${userId}'`,
+    );
+  }
+
   userLogin(userInfo) {
     return this.usersRepository
       .query(

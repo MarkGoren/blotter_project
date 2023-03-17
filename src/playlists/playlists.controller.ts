@@ -1,6 +1,15 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { AdminGuard } from 'src/guards/admin.guard';
 import { PlaylistsService } from './playlists.service';
-import SpotifyWebApi from 'spotify-web-api-node';
 
 @Controller('playlists')
 export class PlaylistsController {
@@ -19,5 +28,26 @@ export class PlaylistsController {
   @Get('whatsNew')
   getNewPlaylists() {
     return this.playlistsService.getNewPlaylists();
+  }
+
+  @Get('getAllGenres')
+  getAllGeneres() {
+    return this.playlistsService.getAllGenres();
+  }
+
+  @Post('addPlaylist')
+  @UseGuards(AdminGuard)
+  addPlaylist(@Body() info, @Res() res) {
+    this.playlistsService.addPlaylist(info).then(() => {
+      return res.status(200).json('playlist added');
+    });
+  }
+
+  @Delete('deletePlaylist/:id')
+  @UseGuards(AdminGuard)
+  deletePlaylistById(@Param('id') id: number, @Res() res) {
+    this.playlistsService.deletePlaylistById(id).then(() => {
+      return res.status(200).json('playlist deleted');
+    });
   }
 }

@@ -5,90 +5,110 @@ import {
   Param,
   Post,
   Put,
-  Redirect,
   Req,
+  Request,
   Res,
 } from '@nestjs/common';
+import { AuthService } from 'src/auth/auth.service';
+import { LocalStrategy } from 'src/auth/local.strategy';
+import { CryptoService } from 'src/crypto/crypto.service';
 import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly localStrategy: LocalStrategy,
+    private readonly authService: AuthService,
+    private readonly cryptoService: CryptoService,
+  ) {}
   @Post('register')
-  userRegister(
+  async userRegister(
     @Body()
     userInfo,
     @Req() req,
     @Res() res,
   ) {
-    this.usersService.userRegister(userInfo).then(() => {
-      this.usersService.getUserInfoByEmail(userInfo.email).then((data) => {
-        this.usersService.sendVerificationEmail(data[0]);
-      });
+    const data = await this.usersService.userRegister(userInfo).then(() => {
+      this.usersService.findUserByEmail(userInfo.email);
     });
-    res.status(200);
+
+    this.usersService.sendVerificationEmail(data[0]).then(() => {
+      res.status(200);
+    });
     res.end();
   }
 
   @Get('exists/:email')
   userExists(@Param('email') email: string) {
-    return this.usersService.userExists(email);
+    return this.usersService.findUserByEmail(email);
   }
 
   @Post('login')
   async userLogin(
     @Body()
     loginInfo,
-    @Req() req,
+    @Request() req,
     @Res() res,
   ) {
-    const userInfo = await this.usersService.userLogin(loginInfo);
+    const userInfo = await this.localStrategy.validate(loginInfo);
+
     if (userInfo) {
-      res.cookie('userInfo', userInfo[0]);
-      res.end();
-    } else {
+      const jwtToken = await this.authService.createToken(userInfo);
+      const { id, email, ...userInfoForCookie } = userInfo;
+      res.cookie('userInfo', userInfoForCookie);
+      res.cookie('jwtToken', jwtToken);
       res.end();
     }
+
+    res.end();
   }
 
-  @Post('subscribe')
-  async userSubscribe(
-    @Body()
-    userInfo,
-    @Req() req,
+  @Put('subscribe')
+  async userSubscribe(@Req() req, @Res() res) {
+    const userInfo = this.authService.decodeToken(req);
+    this.usersService.userSubscribe(userInfo).then(() => {
+      res.cookie('isSub', true);
+      res.end();
+    });
+  }
+
+  //link to route is accessed through email that is sent by register user route
+  @Get('verifyEmail/:encryptedUserId')
+  async verifyEmail(
+    @Param('encryptedUserId') encryptedUserId: string,
     @Res() res,
   ) {
-    this.usersService.userSubscribe(userInfo);
-    res.cookie('isSub', true);
-    res.end();
+    this.usersService.verifyEmail(encryptedUserId).then(() => {
+      res.redirect(302, 'http://localhost:3001/');
+      res.end();
+    });
   }
 
-  @Get('verifyEmail/:userId')
-  async verifyEmail(@Param('userId') userId: number, @Res() res) {
-    this.usersService.verifyEmail(userId);
-    res.redirect(302, 'http://localhost:3001/');
-    res.end();
-  }
-
-  @Get('forgotPassword/:userId')
-  async openChangePasswordPage(@Param('userId') userId: number, @Res() res) {
-    res.cookie('userId', userId);
+  //this route is provided by the sendResetPasswordEmail via sent email
+  @Get('forgotPassword/:encryptedUserId')
+  async openChangePasswordPage(
+    @Param('encryptedUserId') encryptedUserId: number,
+    @Res() res,
+  ) {
+    res.cookie('encryptedUserId', encryptedUserId);
     res.redirect(302, 'http://localhost:3001/changePassword');
     res.end();
   }
 
+  //first step of password reset
   @Post('sendResetPasswordEmail')
   async sendResetPasswordEmail(@Body() data, @Res() res) {
     this.usersService
-      .getUserInfoByEmail(data.email)
+      .findUserByEmail(data.email)
       .then((data) => this.usersService.sendResetPasswordEmail(data[0]));
     res.end();
   }
 
   @Post('changePassword')
   async changePassword(@Body() data, @Req() req, @Res() res) {
-    const userId = req.cookies.userId;
-    this.usersService.changePassword(userId, data.password);
+    const encryptedUserId = req.cookies.encryptedUserId;
+    this.usersService.changePassword(encryptedUserId, data.password);
     res.end();
   }
 }

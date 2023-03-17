@@ -28,4 +28,26 @@ export class PlaylistsService {
       `SELECT * FROM playlists where add_date BETWEEN '${dateWeekAgo}' AND '${dateNow} order by add_date asc'`,
     );
   }
+
+  getAllGenres() {
+    return this.playlistsRepository
+      .query(`SELECT DISTINCT genre FROM playlists`)
+      .then((data) => data.map((obj) => obj.genre));
+  }
+
+  deletePlaylistById(playlistId) {
+    return this.playlistsRepository.query(
+      `DELETE FROM playlists WHERE id = '${playlistId}'`,
+    );
+  }
+
+  addPlaylist(info) {
+    const dateNow = moment().format('YYYY-MM-DD');
+    const playlistSrc = `https://open.spotify.com/embed/playlist/${
+      info.playlistSrc.split('/')[4].split('?')[0]
+    }?utm_source=generator`;
+    return this.playlistsRepository.query(
+      `INSERT INTO playlists (src, add_date, name, genre) VALUES ('${playlistSrc}', '${dateNow}', '${info.playlistName}', '${info.genre}')`,
+    );
+  }
 }

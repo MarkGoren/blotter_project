@@ -1,4 +1,5 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { AdminGuard } from 'src/guards/admin.guard';
 import { SendgridService } from './sendgrid.service';
 
 @Controller('mail')
@@ -6,6 +7,7 @@ export class SendgridController {
   constructor(private readonly sendgridService: SendgridService) {}
 
   @Post('send')
+  @UseGuards(AdminGuard)
   async sendEmail(
     @Body()
     emailValues,

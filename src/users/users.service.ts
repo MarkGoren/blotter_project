@@ -5,23 +5,25 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as SendGrid from '@sendgrid/mail';
 import { ConfigService } from '@nestjs/config';
+import { CryptoService } from 'src/crypto/crypto.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(Users) private usersRepository: Repository<Users>,
+    private readonly cryptoService: CryptoService,
   ) {
     const configService = new ConfigService();
     SendGrid.setApiKey(configService.get<string>('SEND_GRID_KEY'));
   }
 
-  userExists(email) {
+  async findUserByEmail(email) {
     return this.usersRepository.query(
       `select * from users where email like '${email}'`,
     );
   }
 
-  userRegister(userInfo) {
+  async userRegister(userInfo) {
     const username = userInfo.email.split('@')[0];
     const hashed = bcrypt.hashSync(userInfo.password, 10);
     return this.usersRepository.query(
@@ -29,69 +31,48 @@ export class UsersService {
     );
   }
 
-  getUserInfoByEmail(userEmail) {
-    return this.usersRepository.query(
-      `SELECT email, id FROM users WHERE email like '${userEmail}'`,
-    );
-  }
-
-  sendVerificationEmail(userInfo) {
+  async sendVerificationEmail(userInfo) {
     const configService = new ConfigService();
+    const encryptedUserId = await this.cryptoService.encryptUserId(userInfo.id);
     const mail = {
       from: 'gormark2001@gmail.com',
       to: userInfo.email,
       cc: '',
       templateId: configService.get<string>('EMAIL_VERIFICATION_TEMPLATE_ID'),
       dynamicTemplateData: {
-        link: `http://localhost:3000/users/verifyEmail/${userInfo.id}`,
+        link: `http://localhost:3000/users/verifyEmail/${encryptedUserId}`,
       },
     };
     return SendGrid.send(mail);
   }
 
-  sendResetPasswordEmail(userInfo) {
+  async sendResetPasswordEmail(userInfo) {
     const configService = new ConfigService();
+    const encryptedUserId = await this.cryptoService.encryptUserId(userInfo.id);
     const mail = {
       from: 'gormark2001@gmail.com',
       to: userInfo.email,
       cc: '',
       templateId: configService.get<string>('EMAIL_RESET_PASSWORD_TEMPLATE_ID'),
       dynamicTemplateData: {
-        link: `http://localhost:3000/users/forgotPassword/${userInfo.id}`,
+        link: `http://localhost:3000/users/forgotPassword/${encryptedUserId}`,
       },
     };
     return SendGrid.send(mail);
   }
 
-  changePassword(userId, newPassword) {
-    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+  async changePassword(encryptedUserId, newPassword) {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const decryptedUserId = await this.cryptoService.decryptUserId(
+      encryptedUserId,
+    );
     return this.usersRepository.query(
-      `UPDATE users SET password_hash = '${hashedPassword}' WHERE id = '${userId}'`,
+      `UPDATE users SET password_hash = '${hashedPassword}' WHERE id = '${decryptedUserId}'`,
     );
   }
 
-  userLogin(userInfo) {
-    return this.usersRepository
-      .query(
-        `select password_hash, is_verified from users where email like '${userInfo.email}'`,
-      )
-      .then((data) => {
-        if (data[0] && data[0].is_verified) {
-          if (bcrypt.compareSync(userInfo.password, data[0].password_hash)) {
-            return this.usersRepository.query(
-              `select * from users where email like '${userInfo.email}'`,
-            );
-          } else {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      });
-  }
-
   userSubscribe(userInfo) {
-    this.usersRepository.query(
+    return this.usersRepository.query(
       `UPDATE users SET is_sub = '1' WHERE id = '${userInfo.id}'`,
     );
   }
@@ -102,9 +83,12 @@ export class UsersService {
     );
   }
 
-  verifyEmail(userId) {
-    this.usersRepository.query(
-      `UPDATE users SET is_verified = '1' WHERE id = '${userId}'`,
+  async verifyEmail(encryptedUserId: string) {
+    const decryptedUserId = await this.cryptoService.decryptUserId(
+      encryptedUserId,
+    );
+    return this.usersRepository.query(
+      `UPDATE users SET is_verified = '1' WHERE id = '${decryptedUserId}'`,
     );
   }
 }

@@ -13,6 +13,7 @@ import { SendgridModule } from './sendgrid/sendgrid.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { join } from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     FavoritesModule,
     AdminsModule,
     SendgridModule,
+    AuthModule,
     MailerModule.forRoot({
       transport: {
         host: 'smtp.sendgrid.net',
@@ -50,6 +52,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       entities: ['dist/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
